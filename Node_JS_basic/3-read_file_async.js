@@ -1,36 +1,24 @@
 const fs = require('fs');
 
-function countStudents(path) {
-  const promise = (res, rej) => {
+const countStudents = (path) => {
+  return new Promise((resolve, reject) => {
     fs.readFile(path, 'utf8', (error, data) => {
-      if (error) rej(Error('Cannot load the database'));
-      const messages = [];
-      let message;
-      const content = data.toString().split('\n');
-      let students = content.filter((item) => item);
-      students = students.map((item) => item.split(','));
-      const nStudents = students.length ? students.length - 1 : 0;
-      message = `Number of students: ${nStudents}`;
-      console.log(message);
-      messages.push(message);
-      const subjects = {};
-      for (const i in students) {
-        if (i !== 0) {
-          if (!subjects[students[i][3]]) subjects[students[i][3]] = [];
-          subjects[students[i][3]].push(students[i][0]);
-        }
+      if (error) {
+        reject(new Error('Cannot load the database'));
+      } else {
+        const lines = data.split('\n').filter(line => line !== '');
+        const students = lines.map(line => line.split(',')).filter(student => student.length === 4);
+        const csStudents = students.filter(student => student[3] === 'CS').map(student => student[0]);
+        const sweStudents = students.filter(student => student[3] === 'SWE').map(student => student[0]);
+
+        console.log(`Number of students: ${students.length}`);
+        console.log(`Number of students in CS: ${csStudents.length}. List: ${csStudents.join(', ')}`);
+        console.log(`Number of students in SWE: ${sweStudents.length}. List: ${sweStudents.join(', ')}`);
+
+        resolve();
       }
-      delete subjects.subject;
-      for (const key of Object.keys(subjects)) {
-        message = `Number of students in ${key}: ${
-          subjects[key].length
-        }. List: ${subjects[key].join(', ')}`;
-        console.log(message);
-        messages.push(message);
-      }
-      res(messages);
     });
-  };
-  return new Promise(promise);
-}
+  });
+};
+
 module.exports = countStudents;
